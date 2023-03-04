@@ -1,6 +1,6 @@
 //
 //  ViewController.swift
-//  Project10
+//  Project12a
 //
 //  Created by koala panda on 2023/02/21.
 //
@@ -17,6 +17,13 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
         navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addNewPerson))
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .camera, target: self, action: #selector(takePicture))
+        let defaults = UserDefaults.standard
+
+        if let savedPeople = defaults.object(forKey: "people") as? Data {
+            if let decodedPeople = try? NSKeyedUnarchiver.unarchiveTopLevelObjectWithData(savedPeople) as? [Person] {
+                people = decodedPeople
+            }
+        }
     }
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return people.count
@@ -54,6 +61,7 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
             person.name = newName
 
             self?.collectionView.reloadData()
+            self?.save()
         })
 
         present(ac, animated: true)
@@ -86,6 +94,7 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
         let person = Person(name: "Unknown", image: imageName)
         people.append(person)
         collectionView.reloadData()
+        save()
 
         dismiss(animated: true)
     }
@@ -93,6 +102,12 @@ class ViewController: UICollectionViewController, UIImagePickerControllerDelegat
     func getDocumentsDirectory() -> URL {
         let paths = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)
         return paths[0]
+    }
+    func save() {
+        if let savedData = try? NSKeyedArchiver.archivedData(withRootObject: people, requiringSecureCoding: false) {
+            let defaults = UserDefaults.standard
+            defaults.set(savedData, forKey: "people")
+        }
     }
     
     
